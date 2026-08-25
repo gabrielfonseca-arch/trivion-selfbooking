@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/integrations/google/callback"];
+// /api/cron/* fica fora do gate de sessão porque é chamado por uma tarefa
+// agendada externa (sem cookie de usuário) — a autorização desses endpoints
+// é feita internamente por segredo (ver CRON_SECRET em cada rota).
+const PUBLIC_PATHS = ["/login", "/api/integrations/google/callback", "/api/cron/"];
 
 // Verificação otimista de sessão (apenas existência do cookie). A checagem
 // autoritativa (validade da sessão no banco, papel/permissão) acontece nas
