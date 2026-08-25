@@ -106,8 +106,8 @@ export async function ingestCalendarEvent(
   const leadEmail = attendee?.email?.toLowerCase() ?? null;
   const leadName =
     attendee?.name ||
-    extractNameFromDescription(event.description) ||
     extractClientNameFromTitle(event) ||
+    extractNameFromDescription(event.description) ||
     leadEmail?.split("@")[0] ||
     "Lead sem nome";
   const leadPhone = extractPhoneFromDescription(event.description);

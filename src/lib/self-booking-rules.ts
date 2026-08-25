@@ -100,7 +100,10 @@ export function extractClientNameFromTitle(event: NormalizedCalendarEvent): stri
  */
 export function extractNameFromDescription(description?: string | null): string | null {
   if (!description) return null;
-  const labeled = description.match(/(?:nome completo|nome do cliente|nome|cliente)\s*:?\s*([^\n\r]{2,80})/i);
+  // ":" é obrigatório aqui para não confundir com o rótulo fixo "Nome do
+  // evento" que o formulário grava na primeira linha da descrição (esse não
+  // tem ":", então não bate com o padrão abaixo).
+  const labeled = description.match(/(?:nome completo|nome do cliente|nome|cliente)\s*:\s*([^\n\r]{2,80})/i);
   return labeled ? labeled[1].trim() : null;
 }
 
