@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # A Netlify sempre roda `npm install` antes do build; nada extra necessário aqui.
+  # As variáveis de negócio (DATABASE_URL, AUTH_SECRET, GOOGLE_CLIENT_ID, etc.)
+  # devem ser cadastradas em Site settings → Environment variables no painel da Netlify,
+  # nunca commitadas neste arquivo. Veja o README, seção "Deploy na Netlify".
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
