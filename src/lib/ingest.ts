@@ -11,7 +11,7 @@ import {
   type NormalizedCalendarEvent,
 } from "@/lib/self-booking-rules";
 import { recalculateMeetingRisk } from "@/lib/risk-score";
-import { createCadenceTasksForMeeting, createRecoveryTask } from "@/lib/tasks";
+import { createCadenceTasksForMeeting, createRecoveryTask, resolvePendingTasksForMeeting } from "@/lib/tasks";
 import { notify } from "@/lib/notifications";
 import { logAudit } from "@/lib/audit";
 import { applyEventColorStatus } from "@/lib/calendar-colors";
@@ -70,6 +70,8 @@ export async function ingestCalendarEvent(
       type: "Cancelamento detectado no Google Calendar",
       result: "cancelou",
     });
+
+    await resolvePendingTasksForMeeting(existingMeeting.id, "cancelada");
 
     await createRecoveryTask({
       leadId: existingMeeting.leadId,
@@ -213,6 +215,15 @@ export async function ingestCalendarEvent(
         relatedEntityType: "meeting",
         relatedEntityId: existingMeeting.id,
       });
+
+      // Tarefas de cadência antigas foram calculadas em cima do horário
+      // anterior — canceladas e recriadas com base na nova data.
+      await resolvePendingTasksForMeeting(existingMeeting.id, "cancelada", [
+        "confirmar_self_booking",
+        "confirmacao_d1",
+        "lembrete_d0",
+      ]);
+      await createCadenceTasksForMeeting(existingMeeting.id);
     }
 
     await recalculateMeetingRisk(existingMeeting.id);

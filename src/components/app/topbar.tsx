@@ -9,6 +9,7 @@ import { notifications as notificationsTable } from "@/db/schema";
 import { and, eq, isNull, or, desc } from "drizzle-orm";
 import { formatRelativeToNow } from "@/lib/utils";
 import { MobileNav } from "@/components/app/mobile-nav";
+import { ActionMenu } from "@/components/app/action-menu";
 
 export async function Topbar({ user, title }: { user: SessionUser; title?: string }) {
   const unread = await db
@@ -58,7 +59,7 @@ export async function Topbar({ user, title }: { user: SessionUser; title?: strin
             </div>
           </details>
 
-          <details className="relative">
+          <ActionMenu className="relative">
             <summary className="list-none cursor-pointer flex items-center gap-2">
               <Avatar name={user.name} color={user.avatarColor} size={32} />
             </summary>
@@ -77,7 +78,7 @@ export async function Topbar({ user, title }: { user: SessionUser; title?: strin
                 </button>
               </form>
             </div>
-          </details>
+          </ActionMenu>
         </div>
       </div>
     </header>

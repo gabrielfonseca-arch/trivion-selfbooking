@@ -7,7 +7,7 @@ import { meetings, leads, interactions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { logAudit } from "@/lib/audit";
 import { recalculateMeetingRisk } from "@/lib/risk-score";
-import { createRecoveryTask } from "@/lib/tasks";
+import { createRecoveryTask, resolvePendingTasksForMeeting, createCadenceTasksForMeeting } from "@/lib/tasks";
 import { notify } from "@/lib/notifications";
 
 async function assertCanAct(meetingId: string) {
@@ -36,6 +36,11 @@ export async function confirmMeetingAction(meetingId: string) {
     type: "Reunião confirmada",
     result: "confirmou",
   });
+
+  // A tarefa "confirmar self booking" cumpriu seu papel — conclui em vez de
+  // deixar pendente/atrasada para sempre. As demais tarefas de cadência
+  // (D-1, D0, última hora) continuam valendo como lembretes até a reunião.
+  await resolvePendingTasksForMeeting(meetingId, "concluida", ["confirmar_self_booking"]);
 
   await recalculateMeetingRisk(meetingId);
   await logAudit({ userId: user.id, action: "reuniao_confirmada", entityType: "meeting", entityId: meetingId });
@@ -84,6 +89,15 @@ export async function rescheduleMeetingAction(meetingId: string, newDateISO: str
     note: `De ${meeting.scheduledAt.toLocaleString("pt-BR")} para ${newDate.toLocaleString("pt-BR")}`,
   });
 
+  // As tarefas de cadência antigas (D-1, D0, última hora) foram calculadas em
+  // cima do horário anterior — canceladas e recriadas com base na nova data.
+  await resolvePendingTasksForMeeting(meetingId, "cancelada", [
+    "confirmar_self_booking",
+    "confirmacao_d1",
+    "lembrete_d0",
+  ]);
+  await createCadenceTasksForMeeting(meetingId);
+
   await recalculateMeetingRisk(meetingId);
   await logAudit({
     userId: user.id,
@@ -118,6 +132,10 @@ export async function cancelMeetingAction(meetingId: string, reason: string) {
     result: "cancelou",
     note: reason,
   });
+
+  // Tarefas de cadência (confirmação/lembretes) não fazem mais sentido para
+  // uma reunião cancelada — a recuperação segue por uma tarefa própria.
+  await resolvePendingTasksForMeeting(meetingId, "cancelada");
 
   await createRecoveryTask({
     leadId: meeting.leadId,
@@ -158,6 +176,9 @@ export async function markAttendedAction(meetingId: string) {
 
   await db.update(leads).set({ status: "oportunidade", updatedAt: new Date() }).where(eq(leads.id, meeting.leadId));
 
+  // A reunião já aconteceu — lembretes de confirmação pendentes não servem mais.
+  await resolvePendingTasksForMeeting(meetingId, "cancelada");
+
   await recalculateMeetingRisk(meetingId);
   await logAudit({ userId: user.id, action: "reuniao_compareceu", entityType: "meeting", entityId: meetingId });
   revalidatePath("/", "layout");
@@ -191,6 +212,10 @@ export async function markNoShowAction(
     result: "cancelou",
     note: `Motivo: ${reason}${note ? " — " + note : ""}`,
   });
+
+  // Lembretes de confirmação pendentes não fazem mais sentido depois do
+  // no-show — a recuperação segue por uma tarefa própria (abaixo).
+  await resolvePendingTasksForMeeting(meetingId, "cancelada");
 
   await createRecoveryTask({
     leadId: meeting.leadId,

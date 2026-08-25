@@ -248,21 +248,28 @@ export async function getTasksForUser(userId?: string) {
     .where(and(...conditions))
     .orderBy(asc(tasks.dueAt));
 
+  // Tarefas de cadência de reuniões que já tiveram um desfecho final
+  // (compareceu, no-show, cancelada, realizada) não deveriam mais aparecer
+  // como pendência — as ações de reunião já cuidam de resolvê-las, mas
+  // filtramos aqui também como segurança contra dados antigos/órfãos.
+  const MEETING_TERMINAL = ["cancelado", "no_show", "compareceu", "realizada"];
+  const active = rows.filter((r) => !r.meeting || !MEETING_TERMINAL.includes(r.meeting.status));
+
   const now = Date.now();
-  const atrasadas = rows.filter((r) => r.task.dueAt.getTime() < now);
-  const prioridadeAlta = rows.filter(
+  const atrasadas = active.filter((r) => r.task.dueAt.getTime() < now);
+  const prioridadeAlta = active.filter(
     (r) => r.task.dueAt.getTime() >= now && ["alta", "critica"].includes(r.task.priority)
   );
-  const hoje = rows.filter((r) => {
+  const hoje = active.filter((r) => {
     const d = r.task.dueAt;
     const isToday = d.toDateString() === new Date().toDateString();
     return isToday && d.getTime() >= now && !prioridadeAlta.includes(r);
   });
-  const futuras = rows.filter(
+  const futuras = active.filter(
     (r) => !atrasadas.includes(r) && !prioridadeAlta.includes(r) && !hoje.includes(r)
   );
 
-  return { all: rows, atrasadas, prioridadeAlta, hoje, futuras };
+  return { all: active, atrasadas, prioridadeAlta, hoje, futuras };
 }
 
 // ---------------------------------------------------------------------------

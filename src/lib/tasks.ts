@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { tasks, cadenceSteps, meetings } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, inArray, lt } from "drizzle-orm";
 
 export const DEFAULT_CADENCE: {
   stage: "imediato" | "d1" | "d0" | "proximo_horario";
@@ -105,6 +105,59 @@ export async function createCadenceTasksForMeeting(meetingId: string) {
   if (values.length > 0) {
     await db.insert(tasks).values(values);
   }
+}
+
+/**
+ * Resolve (conclui ou cancela) as tarefas de cadência ainda pendentes/adiadas
+ * de uma reunião que já chegou a um desfecho — evita que elas fiquem
+ * acumulando como "atrasadas" para sempre depois que a reunião foi
+ * confirmada, aconteceu, virou no-show ou foi cancelada. Sem isso, cada
+ * reunião deixa 4 tarefas de cadência órfãs no sistema para sempre.
+ */
+export async function resolvePendingTasksForMeeting(
+  meetingId: string,
+  outcome: "concluida" | "cancelada",
+  onlyTypes?: (typeof tasks.$inferSelect)["type"][]
+) {
+  const conditions = [
+    eq(tasks.meetingId, meetingId),
+    inArray(tasks.status, ["pendente", "adiada"]),
+  ];
+  if (onlyTypes && onlyTypes.length > 0) {
+    conditions.push(inArray(tasks.type, onlyTypes));
+  }
+  await db
+    .update(tasks)
+    .set({
+      status: outcome,
+      completedAt: outcome === "concluida" ? new Date() : null,
+    })
+    .where(and(...conditions));
+}
+
+/**
+ * Limpeza em lote (uso administrativo/único): cancela tarefas pendentes ou
+ * adiadas ligadas a reuniões cujo horário já passou. Cobre o passivo
+ * acumulado antes desta correção (reuniões já concluídas/canceladas cujas
+ * tarefas de cadência nunca foram resolvidas). Retorna quantas foram
+ * canceladas.
+ */
+export async function cleanupStaleTasks(): Promise<number> {
+  const now = new Date();
+  const staleMeetings = await db
+    .select({ id: meetings.id })
+    .from(meetings)
+    .where(lt(meetings.scheduledAt, now));
+  const meetingIds = staleMeetings.map((m) => m.id);
+  if (meetingIds.length === 0) return 0;
+
+  const result = await db
+    .update(tasks)
+    .set({ status: "cancelada" })
+    .where(and(inArray(tasks.status, ["pendente", "adiada"]), inArray(tasks.meetingId, meetingIds)))
+    .returning({ id: tasks.id });
+
+  return result.length;
 }
 
 /** Cria uma tarefa de recuperação após um no-show ou cancelamento. */

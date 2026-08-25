@@ -11,6 +11,7 @@ import {
 import { registerInteractionAction } from "@/actions/interactions";
 import { NO_SHOW_REASON_LABEL, RECOVERY_STAGE_LABEL } from "@/lib/labels";
 import { Phone, MessageCircle, CheckCircle2, XCircle, CalendarClock, Ban, UserCheck, UserX, StickyNote } from "lucide-react";
+import { ActionMenu } from "@/components/app/action-menu";
 import type { leads, meetings } from "@/db/schema";
 
 type Lead = typeof leads.$inferSelect;
@@ -63,35 +64,35 @@ export function LeadActions({ lead, meeting }: { lead: Lead; meeting: Meeting | 
 
       {meeting && canActOnMeeting && (
         <div className="flex flex-wrap gap-2">
-          <details className="relative">
+          <ActionMenu className="relative">
             <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50">
               <CalendarClock size={15} /> Remarcar
             </summary>
             <RescheduleForm meetingId={meeting.id} />
-          </details>
+          </ActionMenu>
 
-          <details className="relative">
+          <ActionMenu className="relative">
             <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50 text-red-600">
               <Ban size={15} /> Cancelar
             </summary>
             <CancelForm meetingId={meeting.id} />
-          </details>
+          </ActionMenu>
 
-          <details className="relative">
+          <ActionMenu className="relative">
             <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50 text-red-600">
               <UserX size={15} /> No-show
             </summary>
             <NoShowForm meetingId={meeting.id} />
-          </details>
+          </ActionMenu>
         </div>
       )}
 
-      <details className="relative">
+      <ActionMenu className="relative">
         <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium px-3.5 py-2 hover:bg-brand/20 w-fit">
           <StickyNote size={15} /> Registrar interação / observação
         </summary>
         <InteractionForm leadId={lead.id} meetingId={meeting?.id ?? null} />
-      </details>
+      </ActionMenu>
 
       {meeting && meeting.recoveryStage !== "nenhuma" && meeting.recoveryStage !== "recuperado" && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 flex flex-col gap-2">

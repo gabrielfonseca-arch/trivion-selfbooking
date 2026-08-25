@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/auth";
 import { getTasksForUser } from "@/lib/queries";
 import { TaskRow } from "@/components/app/task-row";
+import { cleanupStaleTasksAction } from "@/actions/tasks";
+import { Broom } from "lucide-react";
 
 export default async function TasksPage() {
   const user = await requireUser();
@@ -15,9 +17,22 @@ export default async function TasksPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Minhas Tarefas</h2>
-        <p className="text-sm text-muted mt-1">{data.all.length} tarefa(s) pendente(s)</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">Minhas Tarefas</h2>
+          <p className="text-sm text-muted mt-1">{data.all.length} tarefa(s) pendente(s)</p>
+        </div>
+        {(user.role === "admin" || user.role === "coordinator") && (
+          <form action={async () => { "use server"; await cleanupStaleTasksAction(); }}>
+            <button
+              type="submit"
+              title="Cancela tarefas de cadência de reuniões que já passaram e nunca foram resolvidas"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50"
+            >
+              <Broom size={15} /> Limpar tarefas de reuniões passadas
+            </button>
+          </form>
+        )}
       </div>
 
       {groups.map((g) => (

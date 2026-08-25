@@ -8,6 +8,7 @@ import {
 } from "@/actions/meetings";
 import { NO_SHOW_REASON_LABEL } from "@/lib/labels";
 import { MoreHorizontal, CheckCircle2, UserCheck, UserX, Ban, CalendarClock } from "lucide-react";
+import { ActionMenu } from "@/components/app/action-menu";
 import type { meetings } from "@/db/schema";
 
 type Meeting = typeof meetings.$inferSelect;
@@ -25,7 +26,7 @@ export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
   }
 
   return (
-    <details className="relative">
+    <ActionMenu className="relative">
       <summary
         className="list-none cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-muted"
         title="Ações rápidas"
@@ -106,6 +107,6 @@ export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
           </form>
         </details>
       </div>
-    </details>
+    </ActionMenu>
   );
 }

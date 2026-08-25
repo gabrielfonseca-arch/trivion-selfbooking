@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { meetings, leads, interactions } from "@/db/schema";
 import { recalculateMeetingRisk } from "@/lib/risk-score";
-import { createRecoveryTask } from "@/lib/tasks";
+import { createRecoveryTask, resolvePendingTasksForMeeting } from "@/lib/tasks";
 import { notify } from "@/lib/notifications";
 import { logAudit } from "@/lib/audit";
 
@@ -55,6 +55,7 @@ export async function applyEventColorStatus(meetingId: string, colorId?: string 
       type: "Confirmação detectada pela cor do evento no Google Calendar",
       result: "confirmou",
     });
+    await resolvePendingTasksForMeeting(meetingId, "concluida", ["confirmar_self_booking"]);
   } else if (target === "realizada") {
     await db
       .update(meetings)
@@ -68,6 +69,7 @@ export async function applyEventColorStatus(meetingId: string, colorId?: string 
       result: "confirmou",
     });
     await db.update(leads).set({ status: "oportunidade", updatedAt: now }).where(eq(leads.id, meeting.leadId));
+    await resolvePendingTasksForMeeting(meetingId, "cancelada");
   } else if (target === "no_show") {
     await db
       .update(meetings)
@@ -88,6 +90,7 @@ export async function applyEventColorStatus(meetingId: string, colorId?: string 
       type: "No-show detectado pela cor do evento no Google Calendar",
       result: "cancelou",
     });
+    await resolvePendingTasksForMeeting(meetingId, "cancelada");
     await createRecoveryTask({
       leadId: meeting.leadId,
       meetingId,
