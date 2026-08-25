@@ -17,8 +17,14 @@ import type { NormalizedCalendarEvent } from "@/lib/self-booking-rules";
 
 // Escopo somente leitura: ler eventos, identificar criação/alteração/
 // cancelamento/remarcação, consultar data/horário, título, descrição,
-// participantes e link da reunião.
-const SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"];
+// participantes e link da reunião. O escopo de userinfo.email é necessário
+// apenas para identificar (exibir) qual conta Google está conectada em
+// Configurações → Integrações — sem ele, a chamada a oauth2.userinfo.get()
+// em connectGoogleAccount() falha com 401 (escopo insuficiente).
+const SCOPES = [
+  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/userinfo.email",
+];
 
 export function isGoogleConfigured() {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
