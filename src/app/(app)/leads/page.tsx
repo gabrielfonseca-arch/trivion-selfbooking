@@ -1,12 +1,14 @@
 import { requireUser } from "@/lib/auth";
 import { db } from "@/db";
-import { leads, users } from "@/db/schema";
-import { and, eq, or, ilike, desc } from "drizzle-orm";
+import { leads, users, meetings } from "@/db/schema";
+import { and, eq, or, ilike, desc, gte, inArray } from "drizzle-orm";
 import { Avatar } from "@/components/ui/avatar";
 import { RiskBadge, Badge } from "@/components/ui/badge";
 import { LEAD_STATUS_LABEL } from "@/lib/labels";
-import { formatDate } from "@/lib/utils";
+import { formatDate, saoPauloDayBounds } from "@/lib/utils";
+import { backfillLeadNamesAction } from "@/actions/leads";
 import Link from "next/link";
+import { Wand2 } from "lucide-react";
 
 export default async function LeadsPage({
   searchParams,
@@ -16,9 +18,24 @@ export default async function LeadsPage({
   const user = await requireUser();
   const sp = await searchParams;
   const search = sp.q?.trim();
+  const showAll = sp.todos === "1";
+
+  // Por padrão só mostra leads com Self Booking a partir de hoje — evita
+  // misturar com meses de histórico/teste. "Ver todos" acima da lista tira
+  // esse filtro quando for preciso auditar leads antigos.
+  let upcomingLeadIds: string[] | null = null;
+  if (!showAll) {
+    const { start: startToday } = saoPauloDayBounds(0);
+    const upcoming = await db
+      .selectDistinct({ leadId: meetings.leadId })
+      .from(meetings)
+      .where(gte(meetings.scheduledAt, startToday));
+    upcomingLeadIds = upcoming.map((m) => m.leadId);
+  }
 
   const conditions = [
     user.role === "sdr" ? eq(leads.sdrUserId, user.id) : undefined,
+    upcomingLeadIds ? inArray(leads.id, upcomingLeadIds.length ? upcomingLeadIds : ["__none__"]) : undefined,
     search
       ? or(ilike(leads.name, `%${search}%`), ilike(leads.company, `%${search}%`), ilike(leads.email, `%${search}%`), ilike(leads.phone, `%${search}%`))
       : undefined,
@@ -37,18 +54,37 @@ export default async function LeadsPage({
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h2 className="text-xl font-semibold text-foreground">Leads</h2>
-          <p className="text-sm text-muted mt-1">{rows.length} lead(s)</p>
+          <p className="text-sm text-muted mt-1">
+            {rows.length} lead(s){!showAll && " com reunião a partir de hoje"} ·{" "}
+            <Link href={showAll ? "/leads" : "/leads?todos=1"} className="text-brand hover:underline">
+              {showAll ? "Ver só a partir de hoje" : "Ver todos"}
+            </Link>
+          </p>
         </div>
-        <form action="/leads" className="flex items-center gap-2">
-          <input
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="Buscar por nome, empresa, e-mail ou telefone"
-            className="rounded-lg border border-border px-3 py-2 text-sm w-72 outline-none focus:ring-2 focus:ring-brand/40"
-          />
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2">Buscar</button>
-        </form>
+        <div className="flex items-center gap-2">
+          {user.role !== "sdr" && (
+            <form action={async () => { "use server"; await backfillLeadNamesAction(); }}>
+              <button
+                type="submit"
+                title="Corrige leads cujo nome ficou igual ao e-mail, lendo o título da reunião na agenda"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50"
+              >
+                <Wand2 size={15} /> Corrigir nomes automaticamente
+              </button>
+            </form>
+          )}
+          <form action="/leads" className="flex items-center gap-2">
+            {showAll && <input type="hidden" name="todos" value="1" />}
+            <input
+              type="search"
+              name="q"
+              defaultValue={search}
+              placeholder="Buscar por nome, empresa, e-mail ou telefone"
+              className="rounded-lg border border-border px-3 py-2 text-sm w-72 outline-none focus:ring-2 focus:ring-brand/40"
+            />
+            <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2">Buscar</button>
+          </form>
+        </div>
       </div>
 
       <div className="card p-0 overflow-x-auto">

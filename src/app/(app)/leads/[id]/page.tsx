@@ -121,6 +121,21 @@ export default async function LeadDetailPage({
                   />
                 )}
               </dl>
+              {(activeMeeting.meeting.rawTitle || activeMeeting.meeting.rawDescription) && (
+                <details className="mt-3 border-t border-border pt-3">
+                  <summary className="cursor-pointer text-xs font-medium text-muted hover:text-brand">
+                    Ver dados originais do evento (Google Calendar)
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-1.5 text-xs">
+                    {activeMeeting.meeting.rawTitle && (
+                      <p><span className="text-muted">Título:</span> {activeMeeting.meeting.rawTitle}</p>
+                    )}
+                    {activeMeeting.meeting.rawDescription && (
+                      <p className="whitespace-pre-wrap"><span className="text-muted">Descrição:</span> {activeMeeting.meeting.rawDescription}</p>
+                    )}
+                  </div>
+                </details>
+              )}
             </div>
           )}
 

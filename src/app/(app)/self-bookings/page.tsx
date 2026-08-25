@@ -4,7 +4,7 @@ import { meetings, leads, users } from "@/db/schema";
 import { and, eq, gte, lte, or, ilike, desc, asc } from "drizzle-orm";
 import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge, RiskBadge } from "@/components/ui/badge";
-import { formatDate, formatTime, cn } from "@/lib/utils";
+import { formatDate, formatTime, cn, saoPauloDayBounds } from "@/lib/utils";
 import Link from "next/link";
 import { confirmMeetingAction } from "@/actions/meetings";
 import { CheckCircle2 } from "lucide-react";
@@ -40,12 +40,13 @@ export default async function SelfBookingsPage({
     conditions.push(eq(meetings.sdrUserId, sdrParam));
   }
 
+  // Limites de dia calculados no fuso de Brasília (não no fuso do servidor,
+  // que roda em UTC) — senão reuniões perto da meia-noite caem no dia errado.
   const now = new Date();
-  const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-  const endToday = new Date(); endToday.setHours(23, 59, 59, 999);
-  const startTomorrow = new Date(startToday.getTime() + 86400000);
-  const endTomorrow = new Date(endToday.getTime() + 86400000);
-  const in7 = new Date(now.getTime() + 7 * 86400000);
+  const { start: startToday } = saoPauloDayBounds(0);
+  const { end: endToday } = saoPauloDayBounds(0);
+  const { start: startTomorrow, end: endTomorrow } = saoPauloDayBounds(1);
+  const { end: in7 } = saoPauloDayBounds(7);
 
   // Motivos/desfechos de reuniões passadas (no-show, cancelamento) precisam
   // continuar visíveis mesmo já tendo ocorrido — os demais filtros (incluindo

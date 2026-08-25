@@ -5,9 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Fuso horário de referência do sistema (Brasília). As funções de Netlify
+// rodam em UTC por padrão — sem fixar o timeZone aqui, todos os horários
+// exibidos ficariam 3h adiantados em relação ao horário real de Brasília.
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleString("pt-BR", {
+    timeZone: APP_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -18,12 +24,32 @@ export function formatDateTime(date: Date | string): string {
 
 export function formatDate(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return d.toLocaleDateString("pt-BR", { timeZone: APP_TIME_ZONE, day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 export function formatTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleTimeString("pt-BR", { timeZone: APP_TIME_ZONE, hour: "2-digit", minute: "2-digit" });
+}
+
+/**
+ * Início e fim de um dia civil em Brasília (não no fuso do servidor),
+ * retornados como instantes UTC. `offsetDays` 0 = hoje, 1 = amanhã, etc.
+ * Usado para filtrar reuniões "de hoje/amanhã" de forma consistente com o
+ * que o usuário vê na tela, já que o Brasil não observa horário de verão
+ * desde 2019 (offset fixo -03:00).
+ */
+export function saoPauloDayBounds(offsetDays: number = 0): { start: Date; end: Date } {
+  const ymdInSaoPaulo = new Intl.DateTimeFormat("en-CA", { timeZone: APP_TIME_ZONE }).format(new Date());
+  const [y, m, d] = ymdInSaoPaulo.split("-").map(Number);
+  const base = new Date(Date.UTC(y, m - 1, d));
+  base.setUTCDate(base.getUTCDate() + offsetDays);
+  const yy = base.getUTCFullYear();
+  const mm = String(base.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(base.getUTCDate()).padStart(2, "0");
+  const start = new Date(`${yy}-${mm}-${dd}T00:00:00-03:00`);
+  const end = new Date(`${yy}-${mm}-${dd}T23:59:59.999-03:00`);
+  return { start, end };
 }
 
 export function formatRelativeToNow(date: Date | string): string {
