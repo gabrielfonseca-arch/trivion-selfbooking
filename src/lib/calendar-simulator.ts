@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { meetings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { ingestCalendarEvent } from "@/lib/ingest";
-import type { NormalizedCalendarEvent } from "@/lib/self-booking-rules";
+import { KNOWN_CLOSER_NAMES, type NormalizedCalendarEvent } from "@/lib/self-booking-rules";
 
 /**
  * Simulador de sincronização com o Google Calendar.
@@ -56,12 +56,16 @@ export function buildFakeSelfBookingEvent(params: {
   const last = pick(LAST_NAMES);
   const company = pick(COMPANIES);
   const leadName = `${first} ${last}`;
+  const closerName = pick(KNOWN_CLOSER_NAMES);
   const email = `${first}.${last}`.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "") + "@" +
     company.toLowerCase().split(" ")[0].normalize("NFD").replace(/[̀-ͯ]/g, "") + ".com.br";
 
   const event: NormalizedCalendarEvent = {
     googleEventId: params.googleEventId ?? `sim-${randomUUID()}`,
-    title: `Self Booking — ${leadName} (${company})`,
+    // Segue o mesmo padrão de título usado nos eventos reais de Self
+    // Booking ("<cliente> e <closer>"), para exercitar a mesma lógica de
+    // classificação usada na sincronização real.
+    title: `${leadName} e ${closerName}`,
     description: `Reunião agendada automaticamente pelo formulário de Self Booking.\nCargo: ${pick(ROLES)}\nOrigem: ${pick(ORIGINS)}\nTelefone: ${randomPhone()}`,
     start: params.scheduledAt,
     end: new Date(params.scheduledAt.getTime() + 30 * 60000),
@@ -73,7 +77,7 @@ export function buildFakeSelfBookingEvent(params: {
     meetingLink: "https://meet.google.com/" + randomUUID().slice(0, 10),
     isCancelled: false,
     updatedAt: new Date(),
-    calendarSourceLabel: "João Gabriel - Closer (simulado)",
+    calendarSourceLabel: `${closerName} - Closer (simulado)`,
   };
 
   return { event, leadName, company };

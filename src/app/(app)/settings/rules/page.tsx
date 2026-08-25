@@ -16,8 +16,11 @@ export default async function RulesSettingsPage() {
       <div>
         <h2 className="text-xl font-semibold text-foreground">Regras de Self Booking</h2>
         <p className="text-sm text-muted mt-1">
-          Defina como o sistema identifica um evento do Google Calendar como Self Booking. Sem regras ativas, todo
-          evento vindo de uma agenda monitorada é tratado como Self Booking por padrão.
+          Defina como o sistema identifica um evento do Google Calendar como Self Booking. Eventos com prefixo
+          &quot;SA&quot; ou &quot;SL&quot; no título nunca contam (são agendamentos feitos pelo próprio SDR). Sem
+          regras ativas, o padrão é considerar Self Booking todo evento no formato &quot;cliente e closer&quot;
+          (ex: &quot;Patricia e Felipe Paiva&quot;) — o que distingue de reuniões internas (onboarding, treinamento
+          etc.) na mesma agenda.
         </p>
       </div>
 
@@ -59,7 +62,12 @@ export default async function RulesSettingsPage() {
             </form>
           </div>
         ))}
-        {rules.length === 0 && <p className="text-sm text-muted">Nenhuma regra cadastrada — todo evento monitorado é tratado como Self Booking.</p>}
+        {rules.length === 0 && (
+          <p className="text-sm text-muted">
+            Nenhuma regra cadastrada — usando o padrão &quot;cliente e closer&quot; no título (excluindo
+            agendamentos com prefixo SA/SL).
+          </p>
+        )}
       </div>
     </div>
   );
