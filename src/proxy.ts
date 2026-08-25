@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/integrations/google/callback"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/integrations/google/callback",
+  "/api/admin/bootstrap", // protegido por header x-bootstrap-secret; remover junto com a rota
+];
 
 // Verificação otimista de sessão (apenas existência do cookie). A checagem
 // autoritativa (validade da sessão no banco, papel/permissão) acontece nas
