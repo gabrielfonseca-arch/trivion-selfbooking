@@ -8,18 +8,8 @@ import { MeetingItem } from "@/components/app/meeting-item";
 import { RiskAlertItem } from "@/components/app/risk-alert-item";
 import { TaskRow } from "@/components/app/task-row";
 import { LinkButton } from "@/components/ui/button";
-import { AlertTriangle, CalendarClock, ListChecks, Users2, TrendingDown, TrendingUp } from "lucide-react";
-
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-function endOfToday() {
-  const d = new Date();
-  d.setHours(23, 59, 59, 999);
-  return d;
-}
+import { saoPauloDayBounds, cn } from "@/lib/utils";
+import { AlertTriangle, CalendarClock, ListChecks, Users2, TrendingDown, TrendingUp, Flame } from "lucide-react";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -46,9 +36,10 @@ export default async function DashboardPage() {
     .orderBy(asc(meetings.scheduledAt))
     .limit(6);
 
+  const { start: startOfTodaySP, end: endOfTodaySP } = saoPauloDayBounds(0);
   const todayConditions = [
-    gte(meetings.scheduledAt, startOfToday()),
-    lte(meetings.scheduledAt, endOfToday()),
+    gte(meetings.scheduledAt, startOfTodaySP),
+    lte(meetings.scheduledAt, endOfTodaySP),
     sdrFilter ? eq(meetings.sdrUserId, sdrFilter) : undefined,
   ].filter(Boolean);
   const todayMeetings = await db.select().from(meetings).where(and(...todayConditions));
@@ -67,6 +58,24 @@ export default async function DashboardPage() {
           <p className="text-sm text-muted mt-1">Aqui está o que você precisa fazer agora.</p>
         </div>
 
+        <div className={cn(
+          "card p-5",
+          atRisk.length > 0 && "border-l-4 border-l-red-500"
+        )}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold flex items-center gap-1.5">
+              <Flame size={15} className="text-red-500" /> Precisa de você agora
+            </h3>
+            <LinkButton href="/self-bookings" variant="ghost" size="sm">Ver tudo</LinkButton>
+          </div>
+          <div className="flex flex-col gap-2">
+            {atRisk.length === 0 && <p className="text-sm text-muted py-4 text-center">Nenhuma reunião em risco no momento. 🎉</p>}
+            {atRisk.map((r) => (
+              <RiskAlertItem key={r.meeting.id} meeting={r.meeting} lead={r.lead} sdrName={r.sdrName} />
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard label="Hoje" value={todayMeetings.length} sub="reuniões" icon={<CalendarClock size={16} className="text-brand" />} />
           <StatCard label="Confirmações pendentes" value={confirmacoesPendentes} tone="warning" icon={<ListChecks size={16} className="text-amber-600" />} />
@@ -75,19 +84,6 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
-          <div className="card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold">🚨 Prioridade agora</h3>
-              <LinkButton href="/self-bookings" variant="ghost" size="sm">Ver tudo</LinkButton>
-            </div>
-            <div className="flex flex-col gap-2">
-              {atRisk.length === 0 && <p className="text-sm text-muted py-4 text-center">Nenhuma reunião em risco no momento. 🎉</p>}
-              {atRisk.map((r) => (
-                <RiskAlertItem key={r.meeting.id} meeting={r.meeting} lead={r.lead} sdrName={r.sdrName} />
-              ))}
-            </div>
-          </div>
-
           <div className="card p-5">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">📅 Próximas reuniões</h3>
@@ -100,20 +96,20 @@ export default async function DashboardPage() {
               ))}
             </div>
           </div>
-        </div>
 
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">✅ Tarefas de hoje</h3>
-            <LinkButton href="/tasks" variant="ghost" size="sm">Minhas tarefas</LinkButton>
-          </div>
-          <div className="flex flex-col gap-2">
-            {[...tasksData.atrasadas, ...tasksData.hoje].length === 0 && (
-              <p className="text-sm text-muted py-4 text-center">Nenhuma tarefa para hoje. 🎉</p>
-            )}
-            {[...tasksData.atrasadas, ...tasksData.hoje].slice(0, 6).map((t) => (
-              <TaskRow key={t.task.id} task={t.task} lead={t.lead} />
-            ))}
+          <div className="card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold">✅ Tarefas de hoje</h3>
+              <LinkButton href="/tasks" variant="ghost" size="sm">Minhas tarefas</LinkButton>
+            </div>
+            <div className="flex flex-col gap-2">
+              {[...tasksData.atrasadas, ...tasksData.hoje].length === 0 && (
+                <p className="text-sm text-muted py-4 text-center">Nenhuma tarefa para hoje. 🎉</p>
+              )}
+              {[...tasksData.atrasadas, ...tasksData.hoje].slice(0, 6).map((t) => (
+                <TaskRow key={t.task.id} task={t.task} lead={t.lead} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -136,6 +132,31 @@ export default async function DashboardPage() {
         <p className="text-sm text-muted mt-1">Últimos 7 dias · Self Booking — Grupo Trivion</p>
       </div>
 
+      <div className={cn(
+        "card p-5",
+        (atRisk.length > 0 || tasksData.atrasadas.length > 0) && "border-l-4 border-l-red-500"
+      )}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-1.5">
+            <Flame size={15} className="text-red-500" /> Precisa da sua atenção
+          </h3>
+          <LinkButton href="/self-bookings" variant="ghost" size="sm">Ver tudo</LinkButton>
+        </div>
+        <div className="flex flex-col gap-2">
+          {atRisk.slice(0, 5).map((r) => (
+            <RiskAlertItem key={r.meeting.id} meeting={r.meeting} lead={r.lead} sdrName={r.sdrName} />
+          ))}
+          {tasksData.atrasadas.length > 0 && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+              {tasksData.atrasadas.length} tarefa(s) atrasada(s) na operação.
+            </div>
+          )}
+          {atRisk.length === 0 && tasksData.atrasadas.length === 0 && (
+            <p className="text-sm text-muted py-4 text-center">Tudo sob controle. 🎉</p>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard label="Self Bookings" value={kpisWeek.total} icon={<CalendarClock size={16} className="text-brand" />} />
         <StatCard label="Comparecimento" value={`${kpisWeek.taxaComparecimento}%`} tone="success" icon={<TrendingUp size={16} className="text-emerald-600" />} />
@@ -144,42 +165,23 @@ export default async function DashboardPage() {
         <StatCard label="Leads em risco (hoje)" value={leadsEmRisco} tone="warning" icon={<AlertTriangle size={16} className="text-amber-600" />} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
-        <div className="card p-5 lg:col-span-2">
-          <h3 className="text-sm font-semibold mb-4">Funil de Self Booking (30 dias)</h3>
-          <div className="flex flex-col gap-2">
-            {funnel.map((step) => (
-              <div key={step.label} className="flex items-center gap-3">
-                <div className="w-40 text-xs text-muted shrink-0">{step.label}</div>
-                <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-brand rounded-full flex items-center justify-end pr-2"
-                    style={{ width: `${Math.max(step.conversionFromStart, 4)}%` }}
-                  >
-                    <span className="text-[10px] text-white font-medium">{step.value}</span>
-                  </div>
+      <div className="card p-5">
+        <h3 className="text-sm font-semibold mb-4">Funil de Self Booking (30 dias)</h3>
+        <div className="flex flex-col gap-2">
+          {funnel.map((step) => (
+            <div key={step.label} className="flex items-center gap-3">
+              <div className="w-40 text-xs text-muted shrink-0">{step.label}</div>
+              <div className="flex-1 h-6 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-brand rounded-full flex items-center justify-end pr-2"
+                  style={{ width: `${Math.max(step.conversionFromStart, 4)}%` }}
+                >
+                  <span className="text-[10px] text-white font-medium">{step.value}</span>
                 </div>
-                <div className="w-14 text-xs text-muted text-right shrink-0">{step.conversionFromStart}%</div>
               </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card p-5">
-          <h3 className="text-sm font-semibold mb-3">🔥 Precisa da sua atenção</h3>
-          <div className="flex flex-col gap-2">
-            {atRisk.slice(0, 5).map((r) => (
-              <RiskAlertItem key={r.meeting.id} meeting={r.meeting} lead={r.lead} sdrName={r.sdrName} />
-            ))}
-            {tasksData.atrasadas.length > 0 && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
-                {tasksData.atrasadas.length} tarefa(s) atrasada(s) na operação.
-              </div>
-            )}
-            {atRisk.length === 0 && tasksData.atrasadas.length === 0 && (
-              <p className="text-sm text-muted py-4 text-center">Tudo sob controle. 🎉</p>
-            )}
-          </div>
+              <div className="w-14 text-xs text-muted text-right shrink-0">{step.conversionFromStart}%</div>
+            </div>
+          ))}
         </div>
       </div>
 

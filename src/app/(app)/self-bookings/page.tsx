@@ -6,8 +6,8 @@ import { Avatar } from "@/components/ui/avatar";
 import { StatusBadge, RiskBadge } from "@/components/ui/badge";
 import { formatDate, formatTime, cn, saoPauloDayBounds } from "@/lib/utils";
 import Link from "next/link";
-import { confirmMeetingAction } from "@/actions/meetings";
-import { CheckCircle2 } from "lucide-react";
+import { MeetingQuickActions } from "@/components/app/meeting-quick-actions";
+import { Search } from "lucide-react";
 
 const FILTERS = [
   { key: "hoje", label: "Hoje" },
@@ -95,13 +95,16 @@ export default async function SelfBookingsPage({
         </div>
         <form action="/self-bookings" className="flex items-center gap-2">
           {filter && <input type="hidden" name="filtro" value={filter} />}
-          <input
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="Buscar por nome, empresa, e-mail ou telefone"
-            className="rounded-lg border border-border px-3 py-2 text-sm w-72 outline-none focus:ring-2 focus:ring-brand/40"
-          />
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input
+              type="search"
+              name="q"
+              defaultValue={search}
+              placeholder="Buscar por nome, empresa, e-mail ou telefone"
+              className="rounded-lg border border-border pl-9 pr-3 py-2 text-sm w-72 outline-none focus:ring-2 focus:ring-brand/40"
+            />
+          </div>
           {sdrList.length > 0 && (
             <select
               name="sdr"
@@ -120,10 +123,10 @@ export default async function SelfBookingsPage({
         </form>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap">
-        <FilterLink label="Todos" active={!filter} href="/self-bookings" search={search} />
+      <div className="flex items-center gap-1 flex-wrap border-b border-border overflow-x-auto">
+        <TabLink label="Todos" active={!filter} href="/self-bookings" search={search} />
         {FILTERS.map((f) => (
-          <FilterLink key={f.key} label={f.label} active={filter === f.key} href={`/self-bookings?filtro=${f.key}`} search={search} />
+          <TabLink key={f.key} label={f.label} active={filter === f.key} href={`/self-bookings?filtro=${f.key}`} search={search} />
         ))}
       </div>
 
@@ -162,17 +165,7 @@ export default async function SelfBookingsPage({
                     <Link href={`/leads/${lead.id}`} className="text-xs font-medium text-brand hover:underline">
                       Abrir
                     </Link>
-                    {!["confirmado", "cancelado", "no_show", "compareceu", "realizada"].includes(meeting.status) && (
-                      <form action={confirmMeetingAction.bind(null, meeting.id)}>
-                        <button
-                          type="submit"
-                          title="Confirmar"
-                          className="flex items-center justify-center w-7 h-7 rounded-lg hover:bg-emerald-50 text-emerald-600"
-                        >
-                          <CheckCircle2 size={16} />
-                        </button>
-                      </form>
-                    )}
+                    <MeetingQuickActions meeting={meeting} />
                   </div>
                 </td>
               </tr>
@@ -191,14 +184,16 @@ export default async function SelfBookingsPage({
   );
 }
 
-function FilterLink({ label, active, href, search }: { label: string; active: boolean; href: string; search?: string }) {
+function TabLink({ label, active, href, search }: { label: string; active: boolean; href: string; search?: string }) {
   const url = search ? `${href}${href.includes("?") ? "&" : "?"}q=${encodeURIComponent(search)}` : href;
   return (
     <Link
       href={url}
       className={cn(
-        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors",
-        active ? "bg-brand text-white border-brand" : "bg-white text-muted border-border hover:bg-gray-50"
+        "px-3.5 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
+        active
+          ? "border-brand text-brand"
+          : "border-transparent text-muted hover:text-foreground hover:border-border"
       )}
     >
       {label}

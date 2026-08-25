@@ -10,7 +10,7 @@ import { LeadActions } from "@/components/app/lead-actions";
 import { updateLeadAction } from "@/actions/leads";
 import { LEAD_STATUS_LABEL } from "@/lib/labels";
 import { formatDateTime, formatDate, formatTime } from "@/lib/utils";
-import { ExternalLink, Pencil } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 export default async function LeadDetailPage({
@@ -76,29 +76,25 @@ export default async function LeadDetailPage({
 
         <div className="flex flex-col gap-5">
           <div className="card p-5">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold">Informações do cliente</h3>
-              <details className="relative">
-                <summary className="list-none cursor-pointer text-muted hover:text-brand"><Pencil size={15} /></summary>
-                <form action={updateLeadAction.bind(null, lead.id)} className="absolute right-0 z-20 mt-2 card p-3 w-72 flex flex-col gap-2 shadow-lg">
-                  <input name="name" defaultValue={lead.name} placeholder="Nome" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <input name="company" defaultValue={lead.company ?? ""} placeholder="Empresa" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <input name="role" defaultValue={lead.role ?? ""} placeholder="Cargo" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <input name="email" defaultValue={lead.email ?? ""} placeholder="E-mail" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <input name="phone" defaultValue={lead.phone ?? ""} placeholder="Telefone" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <input name="whatsapp" defaultValue={lead.whatsapp ?? ""} placeholder="WhatsApp" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-                  <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-1.5">Salvar</button>
-                </form>
-              </details>
-            </div>
-            <dl className="flex flex-col gap-2 text-sm">
-              <Row label="E-mail" value={lead.email} />
-              <Row label="Telefone" value={lead.phone} />
-              <Row label="WhatsApp" value={lead.whatsapp} />
-              <Row label="Origem" value={lead.source} />
-              <Row label="Criado em" value={formatDateTime(lead.createdAt)} />
-              <Row label="Último contato" value={lead.lastContactAt ? formatDateTime(lead.lastContactAt) : "—"} />
-            </dl>
+            <h3 className="text-sm font-semibold mb-3">Informações do cliente</h3>
+            <form action={updateLeadAction.bind(null, lead.id)} className="flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <EditableField name="name" label="Nome" defaultValue={lead.name} />
+                <EditableField name="company" label="Empresa" defaultValue={lead.company ?? ""} />
+                <EditableField name="role" label="Cargo" defaultValue={lead.role ?? ""} />
+                <EditableField name="email" label="E-mail" defaultValue={lead.email ?? ""} type="email" />
+                <EditableField name="phone" label="Telefone" defaultValue={lead.phone ?? ""} />
+                <EditableField name="whatsapp" label="WhatsApp" defaultValue={lead.whatsapp ?? ""} />
+              </div>
+              <button type="submit" className="self-start rounded-lg bg-brand text-white text-sm font-medium px-4 py-1.5">
+                Salvar alterações
+              </button>
+              <dl className="flex flex-col gap-2 text-sm border-t border-border pt-3">
+                <Row label="Origem" value={lead.source} />
+                <Row label="Criado em" value={formatDateTime(lead.createdAt)} />
+                <Row label="Último contato" value={lead.lastContactAt ? formatDateTime(lead.lastContactAt) : "—"} />
+              </dl>
+            </form>
           </div>
 
           {activeMeeting && (
@@ -164,5 +160,30 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-muted text-xs">{label}</dt>
       <dd className="font-medium text-foreground text-right">{value || "—"}</dd>
     </div>
+  );
+}
+
+function EditableField({
+  name,
+  label,
+  defaultValue,
+  type = "text",
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  type?: string;
+}) {
+  return (
+    <label className="flex flex-col gap-1 text-xs">
+      <span className="text-muted">{label}</span>
+      <input
+        name={name}
+        type={type}
+        defaultValue={defaultValue}
+        placeholder={label}
+        className="rounded-lg border border-border px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-brand/40"
+      />
+    </label>
   );
 }

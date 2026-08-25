@@ -15,26 +15,19 @@ export default async function SettingsPage() {
   const user = await requireRole(["admin", "coordinator"]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Configurações</h2>
-        <p className="text-sm text-muted mt-1">Área administrativa do sistema</p>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {SECTIONS.filter((s) => s.roles.includes(user.role)).map((s) => {
-          const Icon = s.icon;
-          return (
-            <Link key={s.href} href={s.href} className="card p-5 hover:shadow-md transition-shadow flex flex-col gap-2">
-              <div className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                <Icon size={18} />
-              </div>
-              <p className="text-sm font-semibold text-foreground">{s.label}</p>
-              <p className="text-xs text-muted">{s.desc}</p>
-            </Link>
-          );
-        })}
-      </div>
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {SECTIONS.filter((s) => s.roles.includes(user.role)).map((s) => {
+        const Icon = s.icon;
+        return (
+          <Link key={s.href} href={s.href} className="card p-5 hover:shadow-md transition-shadow flex flex-col gap-2">
+            <div className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+              <Icon size={18} />
+            </div>
+            <p className="text-sm font-semibold text-foreground">{s.label}</p>
+            <p className="text-xs text-muted">{s.desc}</p>
+          </Link>
+        );
+      })}
     </div>
   );
 }
