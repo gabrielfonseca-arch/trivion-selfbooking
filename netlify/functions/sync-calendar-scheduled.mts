@@ -17,7 +17,15 @@ export default async () => {
     return;
   }
 
-  const baseUrl = process.env.URL || "https://trivion-selfbooking.netlify.app";
+  // process.env.URL é preenchido automaticamente pela Netlify com a URL
+  // pública do site em qualquer contexto de deploy — sem valor fixo aqui
+  // para não colidir com o scanner de segredos do build (NEXTAUTH_URL usa a
+  // mesma URL e está marcada como segredo).
+  const baseUrl = process.env.URL;
+  if (!baseUrl) {
+    console.error("process.env.URL não disponível — sincronização agendada abortada.");
+    return;
+  }
   const url = `${baseUrl}/api/cron/sync-calendar?secret=${encodeURIComponent(secret)}`;
 
   try {
