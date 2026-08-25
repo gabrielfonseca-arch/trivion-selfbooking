@@ -13,7 +13,25 @@ export type NormalizedCalendarEvent = {
   isCancelled: boolean;
   updatedAt: Date;
   calendarSourceLabel?: string | null;
+  /** Marcador de cor do evento no Google Calendar (colorId da API, "1"-"11"). */
+  colorId?: string | null;
 };
+
+/**
+ * Extrai um telefone do texto livre da descrição do evento. O formulário de
+ * Self Booking grava os dados do lead na descrição do evento (padrão
+ * "Telefone: +55 11 91234-5678"); quando não há rótulo explícito, cai para
+ * qualquer sequência que pareça um telefone brasileiro (com ou sem DDI/DDD).
+ */
+export function extractPhoneFromDescription(description?: string | null): string | null {
+  if (!description) return null;
+
+  const labeled = description.match(/(?:telefone|tel|celular|whatsapp|phone)\s*:?\s*([+()\d][\d\s()/.-]{7,}\d)/i);
+  if (labeled) return labeled[1].trim();
+
+  const generic = description.match(/(\+?\d{1,3}[\s.-]?)?\(?\d{2}\)?[\s.-]?9?\d{4}[\s.-]?\d{4}/);
+  return generic ? generic[0].trim() : null;
+}
 
 type Rule = typeof selfBookingRules.$inferSelect;
 

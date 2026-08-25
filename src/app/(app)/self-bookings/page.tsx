@@ -47,6 +47,12 @@ export default async function SelfBookingsPage({
   const endTomorrow = new Date(endToday.getTime() + 86400000);
   const in7 = new Date(now.getTime() + 7 * 86400000);
 
+  // Motivos/desfechos de reuniões passadas (no-show, cancelamento) precisam
+  // continuar visíveis mesmo já tendo ocorrido — os demais filtros (incluindo
+  // "Todos") mostram Self Bookings a partir de hoje.
+  const showsHistorico = filter === "no_show" || filter === "cancelados";
+  if (!showsHistorico) conditions.push(gte(meetings.scheduledAt, startToday));
+
   if (filter === "hoje") conditions.push(and(gte(meetings.scheduledAt, startToday), lte(meetings.scheduledAt, endToday)));
   else if (filter === "amanha") conditions.push(and(gte(meetings.scheduledAt, startTomorrow), lte(meetings.scheduledAt, endTomorrow)));
   else if (filter === "7dias") conditions.push(and(gte(meetings.scheduledAt, now), lte(meetings.scheduledAt, in7)));
@@ -74,7 +80,7 @@ export default async function SelfBookingsPage({
     .innerJoin(leads, eq(meetings.leadId, leads.id))
     .leftJoin(users, eq(meetings.sdrUserId, users.id))
     .where(conditions.length ? and(...(conditions as never[])) : undefined)
-    .orderBy(desc(meetings.scheduledAt))
+    .orderBy(showsHistorico ? desc(meetings.scheduledAt) : asc(meetings.scheduledAt))
     .limit(200);
 
   const sdrList = user.role !== "sdr" ? await db.select().from(users).where(eq(users.role, "sdr")) : [];

@@ -4,12 +4,14 @@ import { eq } from "drizzle-orm";
 import {
   matchesSelfBookingRules,
   extractLeadAttendee,
+  extractPhoneFromDescription,
   type NormalizedCalendarEvent,
 } from "@/lib/self-booking-rules";
 import { recalculateMeetingRisk } from "@/lib/risk-score";
 import { createCadenceTasksForMeeting, createRecoveryTask } from "@/lib/tasks";
 import { notify } from "@/lib/notifications";
 import { logAudit } from "@/lib/audit";
+import { applyEventColorStatus } from "@/lib/calendar-colors";
 
 const INTERNAL_DOMAINS = ["grupotrivion.com", "trivion.com"];
 
@@ -96,6 +98,7 @@ export async function ingestCalendarEvent(
   const attendee = extractLeadAttendee(event, INTERNAL_DOMAINS);
   const leadEmail = attendee?.email?.toLowerCase() ?? null;
   const leadName = attendee?.name || leadEmail?.split("@")[0] || "Lead sem nome";
+  const leadPhone = extractPhoneFromDescription(event.description);
 
   let lead;
   if (leadEmail) {
@@ -113,6 +116,7 @@ export async function ingestCalendarEvent(
       .values({
         name: leadName,
         email: leadEmail,
+        phone: leadPhone,
         source: "self_booking",
         sdrUserId,
         status: "reuniao_marcada",
@@ -126,6 +130,15 @@ export async function ingestCalendarEvent(
       entityId: lead.id,
       after: lead,
     });
+  } else if (leadPhone && !lead.phone) {
+    // Preenche o telefone que faltava (lead criado antes sem esse dado),
+    // sem sobrescrever um valor já existente/editado manualmente.
+    const [updated] = await db
+      .update(leads)
+      .set({ phone: leadPhone, updatedAt: new Date() })
+      .where(eq(leads.id, lead.id))
+      .returning();
+    lead = updated;
   }
 
   // --- Cria ou atualiza a reunião (evita duplicidade por googleEventId) --
@@ -186,6 +199,10 @@ export async function ingestCalendarEvent(
       before: existingMeeting,
       after: updated,
     });
+
+    // Cor do evento (definida pelo closer na própria agenda) reflete o
+    // desfecho da reunião — ver EVENT_COLOR_STATUS_MAP.
+    await applyEventColorStatus(existingMeeting.id, event.colorId);
 
     return {
       outcome: dateChanged ? "remarcado" : "atualizado",
@@ -258,6 +275,10 @@ export async function ingestCalendarEvent(
     entityId: newMeeting.id,
     after: newMeeting,
   });
+
+  // Cor do evento (definida pelo closer na própria agenda) reflete o
+  // desfecho da reunião — ver EVENT_COLOR_STATUS_MAP.
+  await applyEventColorStatus(newMeeting.id, event.colorId);
 
   return { outcome: "criado", meetingId: newMeeting.id, leadId: lead.id };
 }

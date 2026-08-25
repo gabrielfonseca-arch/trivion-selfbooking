@@ -116,6 +116,7 @@ function normalizeEvent(
     hangoutLink?: string | null;
     location?: string | null;
     updated?: string | null;
+    colorId?: string | null;
   },
   calendarSourceLabel: string
 ): NormalizedCalendarEvent | null {
@@ -140,6 +141,7 @@ function normalizeEvent(
     isCancelled: raw.status === "cancelled",
     updatedAt: raw.updated ? new Date(raw.updated) : new Date(),
     calendarSourceLabel,
+    colorId: raw.colorId ?? null,
   };
 }
 
