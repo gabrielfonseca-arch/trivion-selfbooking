@@ -19,7 +19,7 @@ export default async function TasksPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Minhas Tarefas</h2>
+          <h2 className="text-xl font-semibold text-foreground">Tarefas</h2>
           <p className="text-sm text-muted mt-1">{data.all.length} tarefa(s) pendente(s)</p>
         </div>
         {(user.role === "admin" || user.role === "coordinator") && (

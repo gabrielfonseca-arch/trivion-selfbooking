@@ -50,7 +50,7 @@ export default async function PerformancePage({
             <option value="mes">Este mês</option>
             <option value="trimestre">Últimos 90 dias</option>
           </select>
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2">Aplicar</button>
+          <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium px-3.5 py-2">Aplicar</button>
         </form>
       </div>
 

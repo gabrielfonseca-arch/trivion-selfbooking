@@ -48,7 +48,7 @@ export function StatCard({
     success: "text-emerald-600",
     warning: "text-amber-600",
     danger: "text-red-600",
-    brand: "text-brand",
+    brand: "text-brand-strong",
   };
   return (
     <Card className="flex flex-col gap-1">

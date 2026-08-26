@@ -28,7 +28,7 @@ export default async function GoalsSettingsPage() {
             <div className="flex items-center gap-1.5">
               <input type="number" name="targetValue" defaultValue={g.targetValue} className="w-20 rounded-lg border border-border px-2 py-1 text-sm text-right" />
               <span className="text-xs text-muted">{g.unit}</span>
-              <button type="submit" className="text-xs font-medium text-brand hover:underline ml-1">Salvar</button>
+              <button type="submit" className="text-xs font-medium text-brand-strong hover:underline ml-1">Salvar</button>
             </div>
           </form>
         ))}

@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { PriorityBadge } from "@/components/ui/badge";
-import { formatRelativeToNow, formatDateTime, cn } from "@/lib/utils";
+import { formatRelativeToNow, formatDateTime, isOverdue, cn } from "@/lib/utils";
 import { completeTaskAction, postponeTaskAction } from "@/actions/tasks";
 import { CheckCircle2, Clock } from "lucide-react";
+import { WhatsAppButton } from "@/components/app/whatsapp-button";
 import type { tasks, leads } from "@/db/schema";
 
 type Task = typeof tasks.$inferSelect;
 type Lead = typeof leads.$inferSelect;
 
 export function TaskRow({ task, lead }: { task: Task; lead?: Lead | null }) {
-  const overdue = task.dueAt.getTime() < Date.now();
+  const overdue = isOverdue(task.dueAt);
   const complete = completeTaskAction.bind(null, task.id);
   const postpone = postponeTaskAction.bind(null, task.id, 24);
 
@@ -27,11 +28,17 @@ export function TaskRow({ task, lead }: { task: Task; lead?: Lead | null }) {
         </p>
         {task.note && <p className="text-xs text-muted mt-0.5 line-clamp-1">{task.note}</p>}
       </div>
+      {/* Ações com o nome escrito, não só ícone: nesta tela o usuário decide
+          rápido entre concluir e adiar, e adivinhar o que cada ícone faz custa
+          mais do que o espaço que o rótulo ocupa. */}
       <div className="flex items-center gap-1.5 shrink-0">
+        {lead?.whatsapp || lead?.phone ? (
+          <WhatsAppButton lead={lead} />
+        ) : null}
         {lead && (
           <Link
             href={`/leads/${lead.id}`}
-            className="text-xs font-medium text-brand hover:underline px-2 py-1.5"
+            className="hidden sm:inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-medium text-brand-strong hover:bg-brand/10"
           >
             Abrir lead
           </Link>
@@ -39,19 +46,19 @@ export function TaskRow({ task, lead }: { task: Task; lead?: Lead | null }) {
         <form action={postpone}>
           <button
             type="submit"
-            title="Adiar 24h"
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-muted"
+            title="Empurra o prazo desta tarefa em 24 horas"
+            className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted hover:bg-gray-100 whitespace-nowrap"
           >
-            <Clock size={16} />
+            <Clock size={14} /> Adiar 24h
           </button>
         </form>
         <form action={complete}>
           <button
             type="submit"
-            title="Concluir"
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-emerald-50 text-emerald-600"
+            title="Marca esta tarefa como concluída"
+            className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 px-2.5 py-1.5 text-xs font-medium hover:bg-emerald-100 whitespace-nowrap"
           >
-            <CheckCircle2 size={18} />
+            <CheckCircle2 size={14} /> Concluir
           </button>
         </form>
       </div>

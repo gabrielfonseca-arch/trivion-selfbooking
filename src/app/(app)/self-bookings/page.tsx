@@ -90,7 +90,7 @@ export default async function SelfBookingsPage({
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Self Bookings</h2>
+          <h2 className="text-xl font-semibold text-foreground">Reuniões</h2>
           <p className="text-sm text-muted mt-1">{rows.length} reunião(ões) encontradas</p>
         </div>
         <form action="/self-bookings" className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default async function SelfBookingsPage({
               ))}
             </select>
           )}
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2">
+          <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium px-3.5 py-2">
             Buscar
           </button>
         </form>
@@ -162,10 +162,10 @@ export default async function SelfBookingsPage({
                 <td className="px-4 py-3"><RiskBadge level={meeting.riskLevel} score={meeting.riskScore} /></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
-                    <Link href={`/leads/${lead.id}`} className="text-xs font-medium text-brand hover:underline">
+                    <Link href={`/leads/${lead.id}`} className="text-xs font-medium text-brand-strong hover:underline">
                       Abrir
                     </Link>
-                    <MeetingQuickActions meeting={meeting} />
+                    <MeetingQuickActions meeting={meeting} lead={lead} />
                   </div>
                 </td>
               </tr>
@@ -192,7 +192,7 @@ function TabLink({ label, active, href, search }: { label: string; active: boole
       className={cn(
         "px-3.5 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
         active
-          ? "border-brand text-brand"
+          ? "border-brand text-brand-strong"
           : "border-transparent text-muted hover:text-foreground hover:border-border"
       )}
     >

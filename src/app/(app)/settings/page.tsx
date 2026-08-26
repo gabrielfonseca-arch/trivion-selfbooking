@@ -20,7 +20,7 @@ export default async function SettingsPage() {
         const Icon = s.icon;
         return (
           <Link key={s.href} href={s.href} className="card p-5 hover:shadow-md transition-shadow flex flex-col gap-2">
-            <div className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg bg-brand/10 text-brand-strong flex items-center justify-center">
               <Icon size={18} />
             </div>
             <p className="text-sm font-semibold text-foreground">{s.label}</p>

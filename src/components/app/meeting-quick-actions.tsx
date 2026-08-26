@@ -7,26 +7,48 @@ import {
   rescheduleMeetingAction,
 } from "@/actions/meetings";
 import { NO_SHOW_REASON_LABEL } from "@/lib/labels";
-import { MoreHorizontal, CheckCircle2, UserCheck, UserX, Ban, CalendarClock } from "lucide-react";
+import { MoreHorizontal, CheckCircle2, UserCheck, UserX, Ban, CalendarClock, Check } from "lucide-react";
 import { ActionMenu } from "@/components/app/action-menu";
-import type { meetings } from "@/db/schema";
+import { WhatsAppButton } from "@/components/app/whatsapp-button";
+import type { meetings, leads } from "@/db/schema";
 
 type Meeting = typeof meetings.$inferSelect;
+type Lead = typeof leads.$inferSelect;
 
 const TERMINAL = ["cancelado", "no_show", "compareceu", "realizada"];
 
 /**
- * Menu de ações rápidas para uma reunião, pensado para caber numa linha de
- * tabela (Self Bookings, Leads): confirmar, marcar como compareceu, no-show
- * com motivo, cancelar ou remarcar sem precisar abrir a ficha do lead.
+ * Ações de uma reunião numa linha de tabela.
+ *
+ * As duas coisas que mais se faz no dia a dia — confirmar e chamar no
+ * WhatsApp — ficam na superfície, a um clique. O menu de "..." guarda só o
+ * que é menos frequente (compareceu, no-show, remarcar, cancelar), que além
+ * de raro pede confirmação ou um formulário e por isso não cabe inline.
  */
-export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
+export function MeetingQuickActions({ meeting, lead }: { meeting: Meeting; lead?: Lead }) {
   if (TERMINAL.includes(meeting.status)) {
     return <span className="text-xs text-muted">—</span>;
   }
 
+  const jaConfirmada = meeting.status === "confirmado";
+
   return (
-    <ActionMenu className="relative">
+    <div className="flex items-center gap-1">
+      {!jaConfirmada && (
+        <form action={confirmMeetingAction.bind(null, meeting.id)}>
+          <button
+            type="submit"
+            title="Confirmar esta reunião"
+            className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 px-2 py-1.5 text-xs font-medium hover:bg-emerald-100 whitespace-nowrap"
+          >
+            <Check size={13} /> Confirmar
+          </button>
+        </form>
+      )}
+
+      {lead && <WhatsAppButton lead={lead} scheduledAt={meeting.scheduledAt} />}
+
+      <ActionMenu className="relative">
       <summary
         className="list-none cursor-pointer flex items-center justify-center w-8 h-8 rounded-lg hover:bg-gray-100 text-muted"
         title="Ações rápidas"
@@ -34,12 +56,14 @@ export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
         <MoreHorizontal size={16} />
       </summary>
       <div className="absolute right-0 z-30 mt-1 card p-2 w-64 shadow-lg flex flex-col gap-1 text-sm">
-        <form action={confirmMeetingAction.bind(null, meeting.id)}>
-          <button type="submit" className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50 text-emerald-700 text-left">
-            <CheckCircle2 size={14} /> Confirmar reunião
-          </button>
-        </form>
-        {meeting.status === "confirmado" && (
+        {jaConfirmada && (
+          <form action={confirmMeetingAction.bind(null, meeting.id)}>
+            <button type="submit" className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-emerald-50 text-emerald-700 text-left">
+              <CheckCircle2 size={14} /> Reconfirmar reunião
+            </button>
+          </form>
+        )}
+        {jaConfirmada && (
           <form action={markUnconfirmedAction.bind(null, meeting.id)}>
             <button type="submit" className="w-full flex items-center gap-2 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 text-left">
               Marcar como não confirmado
@@ -87,7 +111,7 @@ export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
             className="flex flex-col gap-1.5 mt-1.5 px-1"
           >
             <input type="datetime-local" name="newDateISO" required className="rounded-lg border border-border px-2 py-1.5 text-xs" />
-            <button type="submit" className="rounded-lg bg-brand text-white text-xs font-medium py-1.5">Salvar remarcação</button>
+            <button type="submit" className="rounded-lg bg-brand text-brand-ink text-xs font-medium py-1.5">Salvar remarcação</button>
           </form>
         </details>
 
@@ -107,6 +131,7 @@ export function MeetingQuickActions({ meeting }: { meeting: Meeting }) {
           </form>
         </details>
       </div>
-    </ActionMenu>
+      </ActionMenu>
+    </div>
   );
 }

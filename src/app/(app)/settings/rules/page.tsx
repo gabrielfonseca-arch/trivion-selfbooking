@@ -36,7 +36,7 @@ export default async function RulesSettingsPage() {
           <input name="titleKeywords" placeholder="Palavras-chave no título, separadas por vírgula" className="rounded-lg border border-border px-2.5 py-2 text-sm sm:col-span-2" />
           <input name="meetingTypeMatch" placeholder="Tipo de reunião (opcional)" className="rounded-lg border border-border px-2.5 py-2 text-sm" />
           <input name="responsibleMatch" placeholder="Responsável (opcional)" className="rounded-lg border border-border px-2.5 py-2 text-sm" />
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-2 sm:col-span-2">Criar regra</button>
+          <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-2 sm:col-span-2">Criar regra</button>
         </form>
       </div>
 
@@ -56,7 +56,7 @@ export default async function RulesSettingsPage() {
               </p>
             </div>
             <form action={toggleRuleAction.bind(null, r.id)}>
-              <button type="submit" className="text-xs font-medium text-brand hover:underline">
+              <button type="submit" className="text-xs font-medium text-brand-strong hover:underline">
                 {r.active ? "Desativar" : "Ativar"}
               </button>
             </form>

@@ -5,12 +5,12 @@ const base =
   "inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none";
 
 const variants: Record<string, string> = {
-  primary: "bg-brand text-white hover:bg-brand-dark",
+  primary: "bg-brand text-brand-ink hover:bg-brand-dark",
   secondary: "bg-white text-foreground border border-border hover:bg-gray-50",
   ghost: "text-foreground hover:bg-gray-100",
   danger: "bg-red-600 text-white hover:bg-red-700",
   success: "bg-emerald-600 text-white hover:bg-emerald-700",
-  subtle: "bg-brand/10 text-brand hover:bg-brand/20",
+  subtle: "bg-brand/10 text-brand-strong hover:bg-brand/20",
 };
 
 const sizes: Record<string, string> = {

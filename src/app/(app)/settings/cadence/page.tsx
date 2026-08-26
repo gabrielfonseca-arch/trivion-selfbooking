@@ -50,7 +50,7 @@ export default async function CadenceSettingsPage() {
             <label className="flex items-center gap-1.5 text-xs text-muted">
               <input type="checkbox" name="active" defaultChecked={s.active} /> Ativo
             </label>
-            <button type="submit" className="text-xs font-medium text-brand hover:underline">Salvar</button>
+            <button type="submit" className="text-xs font-medium text-brand-strong hover:underline">Salvar</button>
           </form>
         ))}
       </div>

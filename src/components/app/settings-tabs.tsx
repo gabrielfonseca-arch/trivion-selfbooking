@@ -51,7 +51,7 @@ export function SettingsTabs({ role }: { role: Role }) {
                       href={item.href}
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors",
-                        active ? "bg-brand text-white" : "bg-gray-100 text-muted hover:bg-gray-200"
+                        active ? "bg-brand text-brand-ink" : "bg-gray-100 text-muted hover:bg-gray-200"
                       )}
                     >
                       {item.label}

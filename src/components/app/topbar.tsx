@@ -10,6 +10,8 @@ import { and, eq, isNull, or, desc } from "drizzle-orm";
 import { formatRelativeToNow } from "@/lib/utils";
 import { MobileNav } from "@/components/app/mobile-nav";
 import { ActionMenu } from "@/components/app/action-menu";
+import { QuickSearch } from "@/components/app/quick-search";
+import { TrivionSymbol } from "@/components/brand/logo";
 
 export async function Topbar({ user, title }: { user: SessionUser; title?: string }) {
   const unread = await db
@@ -27,12 +29,20 @@ export async function Topbar({ user, title }: { user: SessionUser; title?: strin
   return (
     <header className="sticky top-0 z-20 bg-surface/90 backdrop-blur border-b border-border">
       <div className="flex items-center justify-between gap-4 px-4 lg:px-6 py-3">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <MobileNav role={user.role} />
-          <h1 className="text-sm font-semibold text-foreground truncate">{title}</h1>
+          {/* No mobile o menu lateral some, então a marca fica aqui. */}
+          <TrivionSymbol size={22} className="lg:hidden text-navy shrink-0" />
+          <h1 className="text-sm font-semibold text-foreground truncate hidden sm:block lg:hidden xl:block">
+            {title}
+          </h1>
+          <div className="hidden md:flex flex-1 justify-end lg:justify-start">
+            <QuickSearch />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-3 shrink-0">
           <details className="relative">
             <summary className="list-none cursor-pointer relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100">
               <Bell size={18} />
@@ -80,6 +90,12 @@ export async function Topbar({ user, title }: { user: SessionUser; title?: strin
             </div>
           </ActionMenu>
         </div>
+      </div>
+
+      {/* No mobile não sobra espaço para a busca na mesma linha do menu e do
+          avatar — ela ganha a própria faixa, em vez de sumir da tela. */}
+      <div className="md:hidden px-4 pb-3">
+        <QuickSearch />
       </div>
     </header>
   );

@@ -34,7 +34,7 @@ export default async function RiskScoreSettingsPage() {
             <input type="number" name="mediumMax" defaultValue={thresholds?.mediumMax ?? 60} className="rounded-lg border border-border px-2.5 py-1.5 text-sm w-24" />
           </div>
           <p className="text-xs text-muted">🔴 Alto risco: acima disso</p>
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-4 py-2">Salvar</button>
+          <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium px-4 py-2">Salvar</button>
         </form>
       </div>
 
@@ -64,7 +64,7 @@ function FactorRow({ id, label, points, active }: { id: string; label: string; p
       <label className="flex items-center gap-1.5 text-xs text-muted">
         <input type="checkbox" name="active" defaultChecked={active} /> Ativo
       </label>
-      <button type="submit" className="text-xs font-medium text-brand hover:underline">Salvar</button>
+      <button type="submit" className="text-xs font-medium text-brand-strong hover:underline">Salvar</button>
     </form>
   );
 }

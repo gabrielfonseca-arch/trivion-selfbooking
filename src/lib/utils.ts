@@ -83,3 +83,12 @@ export function initials(name: string): string {
     .map((p) => p[0]?.toUpperCase())
     .join("");
 }
+
+/**
+ * A data já passou? Fica aqui, e não dentro dos componentes, porque ler o
+ * relógio é um efeito impuro — chamado direto no corpo de um componente, o
+ * lint do React (com razão) reclama.
+ */
+export function isOverdue(date: Date | string): boolean {
+  return new Date(date).getTime() < Date.now();
+}

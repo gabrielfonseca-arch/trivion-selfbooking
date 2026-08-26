@@ -8,6 +8,7 @@ import { LEAD_STATUS_LABEL } from "@/lib/labels";
 import { formatDate, saoPauloDayBounds } from "@/lib/utils";
 import { backfillLeadNamesAction } from "@/actions/leads";
 import { MeetingQuickActions } from "@/components/app/meeting-quick-actions";
+import { WhatsAppButton } from "@/components/app/whatsapp-button";
 import Link from "next/link";
 import { Wand2, Search } from "lucide-react";
 
@@ -74,7 +75,7 @@ export default async function LeadsPage({
           <h2 className="text-xl font-semibold text-foreground">Leads</h2>
           <p className="text-sm text-muted mt-1">
             {rows.length} lead(s){!showAll && " com reunião a partir de hoje"} ·{" "}
-            <Link href={showAll ? "/leads" : "/leads?todos=1"} className="text-brand hover:underline">
+            <Link href={showAll ? "/leads" : "/leads?todos=1"} className="text-brand-strong hover:underline">
               {showAll ? "Ver só a partir de hoje" : "Ver todos"}
             </Link>
           </p>
@@ -103,7 +104,7 @@ export default async function LeadsPage({
                 className="rounded-lg border border-border pl-9 pr-3 py-2 text-sm w-72 outline-none focus:ring-2 focus:ring-brand/40"
               />
             </div>
-            <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2">Buscar</button>
+            <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium px-3.5 py-2">Buscar</button>
           </form>
         </div>
       </div>
@@ -141,7 +142,11 @@ export default async function LeadsPage({
                   <td className="px-4 py-3"><RiskBadge level={lead.riskLevel} score={lead.riskScore} /></td>
                   <td className="px-4 py-3 text-muted whitespace-nowrap">{lead.lastContactAt ? formatDate(lead.lastContactAt) : "—"}</td>
                   <td className="px-4 py-3">
-                    {activeMeeting ? <MeetingQuickActions meeting={activeMeeting} /> : <span className="text-xs text-muted">—</span>}
+                    {activeMeeting ? (
+                      <MeetingQuickActions meeting={activeMeeting} lead={lead} />
+                    ) : (
+                      <WhatsAppButton lead={lead} />
+                    )}
                   </td>
                 </tr>
               );

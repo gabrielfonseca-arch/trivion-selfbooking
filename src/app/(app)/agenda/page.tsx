@@ -61,7 +61,7 @@ export default async function AgendaPage({
               <Link
                 key={v}
                 href={`/agenda?view=${v}&data=${refDate.toISOString().slice(0, 10)}`}
-                className={cn("px-3 py-1.5 text-xs font-medium", view === v ? "bg-brand text-white" : "bg-white text-muted hover:bg-gray-50")}
+                className={cn("px-3 py-1.5 text-xs font-medium", view === v ? "bg-brand text-brand-ink" : "bg-white text-muted hover:bg-gray-50")}
               >
                 {v === "dia" ? "Dia" : v === "semana" ? "Semana" : "Mês"}
               </Link>

@@ -58,7 +58,7 @@ export default async function LeadDetailPage({
             </p>
           </div>
         </div>
-        <Link href="/leads" className="text-sm text-brand hover:underline">← Voltar para Leads</Link>
+        <Link href="/leads" className="text-sm text-brand-strong hover:underline">← Voltar para Leads</Link>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -86,7 +86,7 @@ export default async function LeadDetailPage({
                 <EditableField name="phone" label="Telefone" defaultValue={lead.phone ?? ""} />
                 <EditableField name="whatsapp" label="WhatsApp" defaultValue={lead.whatsapp ?? ""} />
               </div>
-              <button type="submit" className="self-start rounded-lg bg-brand text-white text-sm font-medium px-4 py-1.5">
+              <button type="submit" className="self-start rounded-lg bg-brand text-brand-ink text-sm font-medium px-4 py-1.5">
                 Salvar alterações
               </button>
               <dl className="flex flex-col gap-2 text-sm border-t border-border pt-3">
@@ -110,7 +110,7 @@ export default async function LeadDetailPage({
                   <Row
                     label="Link"
                     value={
-                      <a href={activeMeeting.meeting.meetingLink} target="_blank" rel="noreferrer" className="text-brand hover:underline flex items-center gap-1">
+                      <a href={activeMeeting.meeting.meetingLink} target="_blank" rel="noreferrer" className="text-brand-strong hover:underline flex items-center gap-1">
                         Acessar <ExternalLink size={12} />
                       </a>
                     }
@@ -119,7 +119,7 @@ export default async function LeadDetailPage({
               </dl>
               {(activeMeeting.meeting.rawTitle || activeMeeting.meeting.rawDescription) && (
                 <details className="mt-3 border-t border-border pt-3">
-                  <summary className="cursor-pointer text-xs font-medium text-muted hover:text-brand">
+                  <summary className="cursor-pointer text-xs font-medium text-muted hover:text-brand-strong">
                     Ver dados originais do evento (Google Calendar)
                   </summary>
                   <div className="mt-2 flex flex-col gap-1.5 text-xs">

@@ -28,7 +28,7 @@ export default async function UsersSettingsPage() {
             <option value="coordinator">Coordenador</option>
             <option value="admin">Administrador</option>
           </select>
-          <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-2">Criar (senha padrão: trivion123)</button>
+          <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-2">Criar (senha padrão: trivion123)</button>
         </form>
       </div>
 
@@ -63,7 +63,7 @@ export default async function UsersSettingsPage() {
                 </td>
                 <td className="px-4 py-3">
                   <form action={toggleUserStatusAction.bind(null, u.id)}>
-                    <button type="submit" className="text-xs font-medium text-brand hover:underline">
+                    <button type="submit" className="text-xs font-medium text-brand-strong hover:underline">
                       {u.status === "active" ? "Desativar" : "Ativar"}
                     </button>
                   </form>
@@ -92,7 +92,7 @@ function RoleSelect({ userId, current }: { userId: string; current: string }) {
         <option value="coordinator">Coordenador</option>
         <option value="admin">Administrador</option>
       </select>
-      <button type="submit" className="text-xs font-medium text-brand hover:underline">Salvar</button>
+      <button type="submit" className="text-xs font-medium text-brand-strong hover:underline">Salvar</button>
     </form>
   );
 }

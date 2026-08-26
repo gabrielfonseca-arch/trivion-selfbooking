@@ -34,7 +34,7 @@ export default async function ScriptsPage() {
                   <p className="text-sm font-medium">{s.title}</p>
                   {canEdit && (
                     <details className="relative">
-                      <summary className="list-none cursor-pointer text-muted hover:text-brand"><Pencil size={14} /></summary>
+                      <summary className="list-none cursor-pointer text-muted hover:text-brand-strong"><Pencil size={14} /></summary>
                       <div className="absolute right-0 z-20 mt-2 card p-3 w-80 shadow-lg">
                         <ScriptEditForm scriptId={s.id} content={s.content} />
                       </div>
@@ -59,7 +59,7 @@ export default async function ScriptsPage() {
             </select>
             <input name="title" placeholder="Título" required className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
             <textarea name="content" placeholder="Conteúdo" rows={3} required className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-            <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-1.5 w-fit px-4">Adicionar</button>
+            <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-1.5 w-fit px-4">Adicionar</button>
           </form>
         </div>
       )}
@@ -78,7 +78,7 @@ function ScriptEditForm({ scriptId, content }: { scriptId: string; content: stri
       className="flex flex-col gap-2"
     >
       <textarea name="content" defaultValue={content} rows={5} className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-      <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-1.5">Salvar</button>
+      <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-1.5">Salvar</button>
     </form>
   );
 }

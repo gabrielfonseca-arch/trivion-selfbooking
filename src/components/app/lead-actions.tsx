@@ -44,7 +44,7 @@ export function LeadActions({ lead, meeting }: { lead: Lead; meeting: Meeting | 
         {meeting && canActOnMeeting && (
           <>
             <form action={confirmMeetingAction.bind(null, meeting.id)}>
-              <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-brand text-white text-sm font-medium px-3.5 py-2 hover:bg-brand-dark">
+              <button type="submit" className="inline-flex items-center gap-1.5 rounded-lg bg-brand text-brand-ink text-sm font-medium px-3.5 py-2 hover:bg-brand-dark">
                 <CheckCircle2 size={15} /> Confirmar reunião
               </button>
             </form>
@@ -88,7 +88,7 @@ export function LeadActions({ lead, meeting }: { lead: Lead; meeting: Meeting | 
       )}
 
       <ActionMenu className="relative">
-        <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-brand/10 text-brand text-sm font-medium px-3.5 py-2 hover:bg-brand/20 w-fit">
+        <summary className="list-none cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-brand/10 text-brand-strong text-sm font-medium px-3.5 py-2 hover:bg-brand/20 w-fit">
           <StickyNote size={15} /> Registrar interação / observação
         </summary>
         <InteractionForm leadId={lead.id} meetingId={meeting?.id ?? null} />
@@ -125,7 +125,7 @@ function RescheduleForm({ meetingId }: { meetingId: string }) {
     >
       <label className="text-xs font-medium text-muted">Nova data e horário</label>
       <input type="datetime-local" name="newDateISO" required className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-      <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-1.5">Salvar remarcação</button>
+      <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-1.5">Salvar remarcação</button>
     </form>
   );
 }
@@ -190,7 +190,7 @@ function InteractionForm({ leadId, meetingId }: { leadId: string; meetingId: str
       </div>
       <input name="type" placeholder="Tipo (ex: Primeiro contato)" required className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
       <textarea name="note" rows={3} placeholder="Observação" className="rounded-lg border border-border px-2.5 py-1.5 text-sm" />
-      <button type="submit" className="rounded-lg bg-brand text-white text-sm font-medium py-1.5">Salvar</button>
+      <button type="submit" className="rounded-lg bg-brand text-brand-ink text-sm font-medium py-1.5">Salvar</button>
     </form>
   );
 }
