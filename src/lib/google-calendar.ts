@@ -166,12 +166,21 @@ function normalizeEvent(
 const FULL_RESYNC_DAYS = 7;
 
 /**
- * Teto de páginas por rodada (100 eventos cada). Evita que uma agenda com
- * muita movimentação segure a rodada até o tempo acabar. Se o teto for
- * atingido, o que já foi processado permanece e o restante entra na próxima
- * rodada — que acontece em 5 minutos.
+ * Teto de páginas por rodada — DESLIGADO de propósito.
+ *
+ * Havia um teto de 5 páginas aqui, que eu mesmo adicionei para a rodada não
+ * estourar o tempo. Foi um erro: o Google só devolve o `syncToken` novo na
+ * ÚLTIMA página. Parar antes do fim significa terminar sem token novo, e a
+ * rodada seguinte recomeçar exatamente do mesmo ponto — para sempre.
+ *
+ * Foi o que aconteceu com a agenda do Felipe Paiva: 500 eventos por rodada
+ * (5 páginas × 100), `recebeuTokenNovo: false`, e nenhum avanço. O teto criou
+ * justamente o laço infinito que ele deveria evitar.
+ *
+ * A varredura já é limitada por FULL_RESYNC_DAYS, que é o controle certo:
+ * limita o QUE se busca, em vez de interromper no meio.
  */
-const MAX_PAGES_PER_RUN = 5;
+const MAX_PAGES_PER_RUN = Infinity;
 
 export async function syncCalendarSource(calendarSourceId: string) {
   const authorized = await getAuthorizedClient();
