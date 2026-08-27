@@ -240,10 +240,24 @@ export async function syncCalendarSource(calendarSourceId: string) {
     // sincronização está viva. O syncToken só avança quando o Google devolve
     // um novo (ou seja, quando a varredura chegou ao fim) — senão a próxima
     // rodada perderia os eventos que ficaram para trás.
-    await db
+    const gravadas = await db
       .update(calendarSources)
       .set({ syncToken: nextSyncToken ?? source.syncToken, lastSyncAt: new Date() })
-      .where(eq(calendarSources.id, source.id));
+      .where(eq(calendarSources.id, source.id))
+      .returning({ id: calendarSources.id, lastSyncAt: calendarSources.lastSyncAt });
+
+    // Quantas linhas a gravação afetou, e se o Google devolveu um syncToken
+    // novo. Vai no retorno do endpoint porque é o único canal de diagnóstico
+    // confiável aqui — o log das funções da Netlify não carrega. Se
+    // `linhasGravadas` vier 0, a gravação não achou a linha; se vier 1 e o
+    // horário mesmo assim não avançar na tela, o problema é de leitura.
+    Object.assign(results, {
+      agenda: source.label,
+      linhasGravadas: gravadas.length,
+      gravadoEm: gravadas[0]?.lastSyncAt ?? null,
+      recebeuTokenNovo: Boolean(nextSyncToken),
+      tinhaTokenAntes: Boolean(source.syncToken),
+    });
   } catch (err: unknown) {
     const status = (err as { code?: number; response?: { status?: number } })?.code ??
       (err as { response?: { status?: number } })?.response?.status;
@@ -266,7 +280,15 @@ export async function syncAllCalendarSources() {
     .select()
     .from(calendarSources)
     .where(eq(calendarSources.active, true));
-  const summary = { criados: 0, atualizados: 0, remarcados: 0, cancelados: 0, ignorados: 0 };
+  const summary = {
+    criados: 0,
+    atualizados: 0,
+    remarcados: 0,
+    cancelados: 0,
+    ignorados: 0,
+    // Detalhe por agenda: o que cada uma processou e o que conseguiu gravar.
+    porAgenda: [] as unknown[],
+  };
   for (const source of sources) {
     const r = await syncCalendarSource(source.id);
     summary.criados += r.criados;
@@ -274,6 +296,7 @@ export async function syncAllCalendarSources() {
     summary.remarcados += r.remarcados;
     summary.cancelados += r.cancelados;
     summary.ignorados += r.ignorados;
+    summary.porAgenda.push(r);
   }
   return summary;
 }
