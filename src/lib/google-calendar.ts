@@ -150,6 +150,29 @@ function normalizeEvent(
  * Usa syncToken para sincronização incremental (evita reprocessar tudo) e
  * lida com token expirado (HTTP 410) refazendo uma sincronização completa.
  */
+/**
+ * Janela da ressincronização completa (quando não há syncToken, ou quando o
+ * Google expira o token e devolve 410).
+ *
+ * Eram 30 dias. O problema: essa varredura só grava o syncToken novo no fim de
+ * tudo. Rodando dentro de uma função com limite de tempo, se ela é cortada no
+ * meio nada é salvo, e a rodada seguinte recomeça do mesmo ponto — nunca
+ * converge. Com 7 dias a varredura cabe folgada em uma rodada, e o sistema
+ * volta para o modo incremental (rápido) já na próxima.
+ *
+ * 7 dias também cobre o que o app realmente usa: as telas listam reuniões a
+ * partir de hoje, e o histórico mais antigo já está no banco.
+ */
+const FULL_RESYNC_DAYS = 7;
+
+/**
+ * Teto de páginas por rodada (100 eventos cada). Evita que uma agenda com
+ * muita movimentação segure a rodada até o tempo acabar. Se o teto for
+ * atingido, o que já foi processado permanece e o restante entra na próxima
+ * rodada — que acontece em 5 minutos.
+ */
+const MAX_PAGES_PER_RUN = 5;
+
 export async function syncCalendarSource(calendarSourceId: string) {
   const authorized = await getAuthorizedClient();
   if (!authorized) {
@@ -168,6 +191,7 @@ export async function syncCalendarSource(calendarSourceId: string) {
 
   let pageToken: string | undefined;
   let nextSyncToken: string | undefined;
+  let paginas = 0;
   const results = { criados: 0, atualizados: 0, remarcados: 0, cancelados: 0, ignorados: 0 };
 
   try {
@@ -180,7 +204,7 @@ export async function syncCalendarSource(calendarSourceId: string) {
         maxResults: 100,
         timeMin: source.syncToken
           ? undefined
-          : new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+          : new Date(Date.now() - FULL_RESYNC_DAYS * 24 * 60 * 60 * 1000).toISOString(),
       });
 
       for (const raw of data.items ?? []) {
@@ -200,8 +224,22 @@ export async function syncCalendarSource(calendarSourceId: string) {
 
       pageToken = data.nextPageToken ?? undefined;
       nextSyncToken = data.nextSyncToken ?? nextSyncToken;
+      paginas++;
+
+      if (pageToken && paginas >= MAX_PAGES_PER_RUN) {
+        console.warn(
+          `[sync] ${source.label}: parei em ${paginas} páginas (teto por rodada). ` +
+            `O restante entra na próxima sincronização.`
+        );
+        break;
+      }
     } while (pageToken);
 
+    // lastSyncAt é gravado mesmo quando a rodada parou no teto de páginas: ela
+    // de fato processou eventos, e o horário serve para saber se a
+    // sincronização está viva. O syncToken só avança quando o Google devolve
+    // um novo (ou seja, quando a varredura chegou ao fim) — senão a próxima
+    // rodada perderia os eventos que ficaram para trás.
     await db
       .update(calendarSources)
       .set({ syncToken: nextSyncToken ?? source.syncToken, lastSyncAt: new Date() })
