@@ -16,7 +16,26 @@ import { notify } from "@/lib/notifications";
 import { logAudit } from "@/lib/audit";
 import { applyEventColorStatus } from "@/lib/calendar-colors";
 
-const INTERNAL_DOMAINS = ["grupotrivion.com", "trivion.com"];
+// Domínios das pessoas de dentro de casa. Serve para achar, entre os
+// convidados de um evento, qual é o lead (o único de fora).
+//
+// nexaeducacao.com e saleshuboficial.com entram aqui porque também são marcas
+// do grupo: os eventos criados pelo SDR Hub colocam um e-mail interno da Nexa
+// como convidado e deixam o nome do lead só no título/descrição. Sem esses
+// domínios na lista, o sistema lia esse e-mail interno como se fosse o lead e
+// empilhava reuniões de pessoas diferentes num único cadastro.
+const INTERNAL_DOMAINS = [
+  "grupotrivion.com",
+  "trivion.com",
+  "nexaeducacao.com",
+  "saleshuboficial.com",
+];
+
+/** O e-mail pertence a alguém de dentro do grupo? */
+export function isInternalEmail(email: string): boolean {
+  const e = email.toLowerCase();
+  return INTERNAL_DOMAINS.some((d) => e.endsWith(`@${d}`));
+}
 
 export type IngestResult = {
   outcome: "criado" | "atualizado" | "remarcado" | "cancelado" | "ignorado";
@@ -106,6 +125,14 @@ export async function ingestCalendarEvent(
   // na descrição, e só caímos para o prefixo do e-mail como último recurso.
   const attendee = extractLeadAttendee(event, INTERNAL_DOMAINS);
   const leadEmail = attendee?.email?.toLowerCase() ?? null;
+
+  // Se sobrou só gente de casa entre os convidados, isto não é uma reunião com
+  // lead — é reunião interna, ou um evento agendado por outro sistema que usa
+  // um e-mail interno como convidado. Ignorar é melhor do que cadastrar um
+  // lead com e-mail da própria empresa.
+  if (leadEmail && isInternalEmail(leadEmail)) {
+    return { outcome: "ignorado" };
+  }
   const leadName =
     attendee?.name ||
     extractClientNameFromTitle(event) ||

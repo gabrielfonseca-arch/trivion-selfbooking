@@ -6,11 +6,11 @@ import { Avatar } from "@/components/ui/avatar";
 import { RiskBadge, Badge } from "@/components/ui/badge";
 import { LEAD_STATUS_LABEL } from "@/lib/labels";
 import { formatDate, saoPauloDayBounds } from "@/lib/utils";
-import { backfillLeadNamesAction } from "@/actions/leads";
+import { backfillLeadNamesAction, cleanupInternalLeadsAction } from "@/actions/leads";
 import { MeetingQuickActions } from "@/components/app/meeting-quick-actions";
 import { WhatsAppButton } from "@/components/app/whatsapp-button";
 import Link from "next/link";
-import { Wand2, Search } from "lucide-react";
+import { Wand2, Search, UserMinus } from "lucide-react";
 
 export default async function LeadsPage({
   searchParams,
@@ -89,6 +89,17 @@ export default async function LeadsPage({
                 className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50"
               >
                 <Wand2 size={15} /> Corrigir nomes automaticamente
+              </button>
+            </form>
+          )}
+          {user.role !== "sdr" && (
+            <form action={async () => { "use server"; await cleanupInternalLeadsAction(); }}>
+              <button
+                type="submit"
+                title="Remove cadastros que na verdade são pessoas do próprio grupo, criados por engano quando um evento trazia um e-mail interno como convidado"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-border text-sm font-medium px-3.5 py-2 hover:bg-gray-50"
+              >
+                <UserMinus size={15} /> Remover leads internos
               </button>
             </form>
           )}
